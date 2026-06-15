@@ -90,17 +90,21 @@ function getProductSlug() {
 function loadProduct() {
   const slug = getProductSlug();
 
-  fetch('data/products.json')
+  fetch('/products')
     .then(response => response.json())
     .then(products => {
-      const product = products.find(item => item.slug === slug) || products[0];
+      const items = Array.isArray(products) ? products : [];
+      const product = items.find(item => item.slug === slug) || items[0];
+      if (!product) {
+        throw new Error('Produk tidak ditemukan');
+      }
       productNameEl.textContent = product.name;
       productImageEl.src = product.image;
       productImageEl.alt = product.name;
       productDescriptionEl.textContent = product.description;
       productCategoryEl.textContent = product.category;
       productPriceEl.textContent = formatPrice(product.price);
-      productFeaturesEl.innerHTML = product.features.map(feature => `<li>${feature}</li>`).join('');
+      productFeaturesEl.innerHTML = (product.features || []).map(feature => `<li>${feature}</li>`).join('');
 
       addToCartButton.addEventListener('click', () => updateCart(product));
     })

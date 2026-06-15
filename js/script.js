@@ -15,11 +15,10 @@ function formatPrice(amount) {
 function loadHomepageProducts() {
   if (!productGrid) return;
 
-  fetch('data/products.json')
+  fetch('/products')
     .then(response => response.json())
     .then(products => {
-      // Tampilkan hanya 3 produk rekomendasi
-      const recommendedProducts = products.slice(0, 3);
+      const recommendedProducts = Array.isArray(products) ? products.slice(0, 3) : [];
       productGrid.innerHTML = recommendedProducts.map(product => `
         <article class="product-card">
           <img src="${product.image}" alt="${product.name}" class="product-image" />

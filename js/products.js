@@ -12,10 +12,10 @@ function formatPrice(amount) {
 }
 
 function loadAllProducts() {
-  fetch('data/products.json')
+  fetch('/products')
     .then(response => response.json())
     .then(products => {
-      allProducts = products;
+      allProducts = Array.isArray(products) ? products : [];
       renderProducts();
     })
     .catch(() => {

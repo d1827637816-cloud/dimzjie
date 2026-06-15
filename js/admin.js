@@ -143,7 +143,7 @@ addProductForm?.addEventListener('submit', handleAddProductSubmit);
 function loadLatestProducts(limit = 6) {
   if (!latestProductsEl) return;
   latestProductsEl.innerHTML = '<p>Memuat produk terbaru...</p>';
-  fetch('data/products.json')
+  fetch('/products')
     .then(resp => resp.json())
     .then(products => {
       const sorted = Array.isArray(products) ? products.slice().sort((a, b) => b.id - a.id) : [];
@@ -176,61 +176,3 @@ function renderLatestProducts(items) {
 
 // initial load
 loadLatestProducts();
-
-function handleAddProductSubmit(event) {
-  event.preventDefault();
-  if (!addProductForm) return;
-
-  const name = productNameInput.value.trim();
-  const price = Number(productPriceInput.value);
-  const category = productCategoryInput.value.trim();
-  const slug = productSlugInput.value.trim() || createSlug(name);
-  const description = productDescriptionInput.value.trim();
-  const features = productFeaturesInput.value
-    .split(',')
-    .map(feature => feature.trim())
-    .filter(Boolean);
-  const imageUrl = productImageUrlInput.value.trim();
-  const imageFile = productImageFileInput.files?.[0];
-
-  if (!name || !price || price <= 0 || !category || !description) {
-    displayProductFormMessage('Lengkapi semua data produk yang wajib diisi.', 'error');
-    return;
-  }
-
-  if (!imageUrl && !imageFile) {
-    displayProductFormMessage('Masukkan URL gambar atau unggah file gambar produk.', 'error');
-    return;
-  }
-
-  const formData = new FormData();
-  formData.append('name', name);
-  formData.append('price', price);
-  formData.append('category', category);
-  formData.append('slug', slug);
-  formData.append('description', description);
-  formData.append('features', JSON.stringify(features));
-  formData.append('imageUrl', imageUrl);
-  if (imageFile) {
-    formData.append('imageFile', imageFile);
-  }
-
-  fetch('/products', {
-    method: 'POST',
-    body: formData,
-  })
-    .then(response => response.json())
-    .then(data => {
-      if (data.success) {
-        displayProductFormMessage('Produk berhasil ditambahkan.', 'success');
-        addProductForm.reset();
-      } else {
-        displayProductFormMessage(data.error || 'Gagal menambahkan produk.', 'error');
-      }
-    })
-    .catch(() => {
-      displayProductFormMessage('Terjadi kesalahan saat mengirim data produk.', 'error');
-    });
-}
-
-addProductForm?.addEventListener('submit', handleAddProductSubmit);
