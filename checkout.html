@@ -47,22 +47,51 @@
               <textarea id="customer-address" required placeholder="Alamat lengkap untuk pengiriman"></textarea>
             </label>
             <div class="payment-methods">
-              <span class="payment-label">Transfer</span>
-              <div class="payment-note">
+              <span class="payment-label">Pilih Metode Pembayaran</span>
+              <div class="payment-options">
+                <label><input type="radio" name="payment-method" value="Transfer" checked /> Transfer Bank / DANA</label>
+                <label><input type="radio" name="payment-method" value="QRIS" /> QRIS</label>
+                <label><input type="radio" name="payment-method" value="E-Wallet" /> E-Wallet</label>
+                <label><input type="radio" name="payment-method" value="Stripe" /> Kartu Debit/Kredit (Stripe)</label>
+              </div>
+            </div>
+            <div id="transfer-fields">
+              <div class="payment-note" id="payment-method-note">
                 Transfer ke nomor <strong>082376890370</strong> sebelum menekan tombol konfirmasi.
               </div>
-              <div class="transfer-amount-note">
-                Nominal yang harus ditransfer: <strong id="transfer-amount-label">Rp0</strong>
+              <div class="transfer-amount-note" id="transfer-amount-note">
+                Nominal yang harus dibayar: <strong id="transfer-amount-label">Rp0</strong>
+              </div>
+              <div id="payment-extra-info" class="payment-extra-info">
+                <div id="qris-placeholder" class="payment-placeholder" style="display: none;">
+                  <div class="payment-placeholder-header">Scan QRIS</div>
+                  <div class="qris-code"></div>
+                  <p>Scan kode QR di atas dengan aplikasi dompet digital Anda.</p>
+                </div>
+                <div id="ewallet-placeholder" class="payment-placeholder" style="display: none;">
+                  <div class="payment-placeholder-header">Bayar dengan E-Wallet</div>
+                  <div class="ewallet-options">
+                    <span>OVO</span>
+                    <span>DANA</span>
+                    <span>ShopeePay</span>
+                  </div>
+                  <p>Pilih aplikasi e-wallet Anda lalu selesaikan pembayaran. Unggah bukti setelah selesai.</p>
+                </div>
               </div>
               <label>
                 Masukkan nominal transfer yang Anda kirimkan
                 <input type="text" inputmode="numeric" id="transfer-amount" required placeholder="Masukkan nominal transfer" />
               </label>
               <label>
-                Unggah bukti transfer (screenshot atau foto struk)
+                Unggah bukti pembayaran (screenshot atau foto struk)
                 <input type="file" id="proof-upload" accept="image/*" required />
               </label>
-              <label><input type="checkbox" id="confirm-transfer" /> Saya sudah transfer dan mengunggah bukti transfer</label>
+              <label><input type="checkbox" id="confirm-transfer" /> Saya sudah melakukan pembayaran dan mengunggah bukti.</label>
+            </div>
+            <div id="stripe-fields" style="display: none; margin-top: 1rem;">
+              <div class="payment-note">
+                Anda akan diarahkan ke halaman pembayaran aman Stripe untuk melakukan transaksi kartu.
+              </div>
             </div>
             <button type="submit" class="btn btn-primary">Konfirmasi Pesanan</button>
           </form>

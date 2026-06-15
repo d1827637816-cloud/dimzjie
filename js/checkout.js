@@ -7,6 +7,12 @@ const customerAddress = document.getElementById('customer-address');
 const transferAmountEl = document.getElementById('transfer-amount');
 const transferAmountLabel = document.getElementById('transfer-amount-label');
 const proofUpload = document.getElementById('proof-upload');
+const transferFields = document.getElementById('transfer-fields');
+const stripeInfoBox = document.getElementById('stripe-fields');
+const qrisPlaceholder = document.getElementById('qris-placeholder');
+const ewalletPlaceholder = document.getElementById('ewallet-placeholder');
+const paymentMethodNote = document.getElementById('payment-method-note');
+const checkoutSubmitButton = checkoutForm?.querySelector('button[type="submit"]');
 const CART_KEY = 'dimzjie_cart';
 const TRANSFER_ACCOUNT = '082376890370';
 const API_BASE_URL = (() => {
@@ -18,6 +24,61 @@ const API_BASE_URL = (() => {
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 }
+
+function getSelectedPaymentMethod() {
+  const selectedInput = document.querySelector('input[name="payment-method"]:checked');
+  return selectedInput ? selectedInput.value : 'Transfer';
+}
+
+function updatePaymentMethodFields() {
+  const method = getSelectedPaymentMethod();
+  const isStripe = method === 'Stripe';
+
+  if (transferFields) {
+    transferFields.style.display = isStripe ? 'none' : 'block';
+  }
+  if (stripeInfoBox) {
+    stripeInfoBox.style.display = isStripe ? 'block' : 'none';
+  }
+
+  if (paymentMethodNote) {
+    if (method === 'Transfer') {
+      paymentMethodNote.innerHTML = 'Transfer ke nomor <strong>082376890370</strong> sebelum menekan tombol konfirmasi.';
+    } else if (method === 'QRIS') {
+      paymentMethodNote.innerHTML = 'Bayar melalui QRIS dengan memindai kode QR yang tersedia di aplikasi dompet digital Anda.';
+    } else if (method === 'E-Wallet') {
+      paymentMethodNote.innerHTML = 'Bayar melalui OVO, DANA, atau ShopeePay. Unggah bukti pembayaran setelah transaksi selesai.';
+    }
+  }
+
+  if (qrisPlaceholder) {
+    qrisPlaceholder.style.display = method === 'QRIS' ? 'block' : 'none';
+  }
+  if (ewalletPlaceholder) {
+    ewalletPlaceholder.style.display = method === 'E-Wallet' ? 'block' : 'none';
+  }
+
+  if (transferAmountEl) {
+    transferAmountEl.required = !isStripe;
+  }
+  if (proofUpload) {
+    proofUpload.required = !isStripe;
+  }
+
+  const confirmTransfer = document.getElementById('confirm-transfer');
+  if (confirmTransfer) {
+    confirmTransfer.required = !isStripe;
+    if (isStripe) confirmTransfer.checked = false;
+  }
+
+  if (checkoutSubmitButton) {
+    checkoutSubmitButton.textContent = isStripe ? 'Bayar Sekarang' : 'Konfirmasi Pesanan';
+  }
+}
+
+const paymentMethodInputs = document.querySelectorAll('input[name="payment-method"]');
+paymentMethodInputs.forEach(input => input.addEventListener('change', updatePaymentMethodFields));
+updatePaymentMethodFields();
 
 function getCart() {
   const stored = window.localStorage.getItem(CART_KEY);
@@ -199,23 +260,75 @@ function handleCheckoutSubmit(event) {
     return;
   }
 
+  const paymentMethod = getSelectedPaymentMethod();
   const confirmTransfer = document.getElementById('confirm-transfer');
   const transferAmountInputRaw = transferAmountEl ? transferAmountEl.value : '';
   const transferAmountInput = parseCurrencyInput(transferAmountInputRaw);
   const totalAmount = calculateCartTotal(cart);
 
+  if (paymentMethod === 'Stripe') {
+    const orderData = {
+      id: Date.now(),
+      name: customerName.value,
+      email: customerEmail.value,
+      phone: customerPhone.value,
+      address: customerAddress.value,
+      paymentMethod: 'Stripe',
+      total: totalAmount,
+      cart,
+      transferredTo: null,
+      transferAmount: totalAmount,
+      status: 'pending_payment',
+      createdAt: new Date().toISOString(),
+    };
+
+    if (!orderData.name || !orderData.email || !orderData.phone || !orderData.address) {
+      alert('Harap lengkapi semua data pengiriman terlebih dahulu.');
+      return;
+    }
+
+    fetch(`${API_BASE_URL}/create-checkout-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        customerName: orderData.name,
+        customerEmail: orderData.email,
+        customerPhone: orderData.phone,
+        customerAddress: orderData.address,
+        cart: orderData.cart,
+        total: orderData.total,
+      }),
+    })
+      .then(async response => {
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Gagal membuat sesi pembayaran Stripe.');
+        }
+        window.localStorage.setItem('dimzjie_last_order', JSON.stringify(orderData));
+        window.location.href = data.url;
+      })
+      .catch(error => {
+        console.error('Stripe checkout error:', error);
+        alert(`Gagal mengarahkan ke Stripe: ${error.message}`);
+      });
+
+    return;
+  }
+
   if (!confirmTransfer?.checked) {
-    alert('Silakan konfirmasi bahwa Anda sudah transfer dan mengunggah bukti transfer.');
+    alert('Silakan konfirmasi bahwa Anda sudah melakukan pembayaran dan mengunggah bukti pembayaran.');
     return;
   }
 
   if (!transferAmountInput || transferAmountInput < totalAmount) {
-    alert(`Nominal transfer harus minimal sama dengan total belanja: ${formatPrice(totalAmount)}.`);
+    alert(`Nominal pembayaran harus minimal sama dengan total belanja: ${formatPrice(totalAmount)}.`);
     return;
   }
 
   if (!proofUpload?.files?.length) {
-    alert('Unggah bukti transfer terlebih dahulu sebelum mengonfirmasi pesanan.');
+    alert('Unggah bukti pembayaran terlebih dahulu sebelum mengonfirmasi pesanan.');
     return;
   }
 
@@ -225,10 +338,10 @@ function handleCheckoutSubmit(event) {
     email: customerEmail.value,
     phone: customerPhone.value,
     address: customerAddress.value,
-    paymentMethod: 'Transfer',
+    paymentMethod,
     total: calculateCartTotal(cart),
     cart,
-    transferredTo: TRANSFER_ACCOUNT,
+    transferredTo: paymentMethod === 'Transfer' ? TRANSFER_ACCOUNT : null,
     transferAmount: transferAmountInput,
     proofName: proofUpload?.files?.[0]?.name || null,
     status: 'menunggu konfirmasi',

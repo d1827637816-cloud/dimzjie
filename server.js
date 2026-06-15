@@ -6,6 +6,8 @@ const multer = require('multer');
 const dotenv = require('dotenv');
 
 dotenv.config();
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY || '';
+const stripe = STRIPE_SECRET_KEY ? require('stripe')(STRIPE_SECRET_KEY) : null;
 
 const app = express();
 app.use(cors());
@@ -22,13 +24,120 @@ if (!fs.existsSync(uploadDir)) {
 }
 const upload = multer({ dest: uploadDir });
 
-function saveNotification(data) {
-  const existing = fs.existsSync(notificationsFile)
+function getNotifications() {
+  return fs.existsSync(notificationsFile)
     ? JSON.parse(fs.readFileSync(notificationsFile, 'utf-8'))
     : [];
+}
+
+function saveNotification(data) {
+  const existing = getNotifications();
   existing.push(data);
   fs.writeFileSync(notificationsFile, JSON.stringify(existing, null, 2));
 }
+
+function findNotificationByStripeSession(sessionId) {
+  return getNotifications().find(item => item.stripeSessionId === sessionId);
+}
+
+app.post('/create-checkout-session', async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ success: false, error: 'Stripe belum dikonfigurasi di server.' });
+    }
+
+    const { customerName, customerEmail, customerPhone, customerAddress, cart, total } = req.body;
+    if (!customerName || !customerEmail || !customerPhone || !customerAddress || !Array.isArray(cart) || cart.length === 0) {
+      return res.status(400).json({ success: false, error: 'Data pesanan tidak lengkap.' });
+    }
+
+    const lineItems = cart.map(item => ({
+      price_data: {
+        currency: 'idr',
+        product_data: {
+          name: item.name,
+          description: item.description || '',
+          images: item.image ? [item.image] : [],
+        },
+        unit_amount: Number(item.price),
+      },
+      quantity: Number(item.quantity) || 1,
+    }));
+
+    const session = await stripe.checkout.sessions.create({
+      payment_method_types: ['card'],
+      line_items: lineItems,
+      mode: 'payment',
+      success_url: `${req.headers.origin}/confirm.html?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${req.headers.origin}/checkout.html`,
+      customer_email: customerEmail,
+      metadata: {
+        customerName,
+        customerEmail,
+        customerPhone,
+        customerAddress,
+        cart: JSON.stringify(cart),
+        total: String(total),
+      },
+    });
+
+    res.json({ success: true, url: session.url });
+  } catch (error) {
+    console.error('Stripe checkout session error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Gagal membuat sesi pembayaran Stripe.' });
+  }
+});
+
+app.get('/checkout-session', async (req, res) => {
+  try {
+    if (!stripe) {
+      return res.status(500).json({ success: false, error: 'Stripe belum dikonfigurasi di server.' });
+    }
+
+    const sessionId = req.query.sessionId;
+    if (!sessionId) {
+      return res.status(400).json({ success: false, error: 'sessionId diperlukan.' });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId, { expand: ['payment_intent'] });
+
+    if (session.payment_status !== 'paid') {
+      return res.status(400).json({ success: false, error: 'Pembayaran belum selesai.', session });
+    }
+
+    const existingOrder = findNotificationByStripeSession(session.id);
+    if (existingOrder) {
+      return res.json({ success: true, order: existingOrder, session });
+    }
+
+    const metadata = session.metadata || {};
+    const cart = metadata.cart ? JSON.parse(metadata.cart) : [];
+    const order = {
+      id: Date.now(),
+      name: metadata.customerName || session.customer_details?.name || '',
+      email: metadata.customerEmail || session.customer_details?.email || '',
+      phone: metadata.customerPhone || '',
+      address: metadata.customerAddress || '',
+      paymentMethod: 'Stripe',
+      total: Number(metadata.total) || Number(session.amount_total) || 0,
+      cart,
+      transferredTo: null,
+      transferAmount: Number(session.amount_total) || 0,
+      status: 'Paid',
+      shipmentStage: 'Menunggu Konfirmasi',
+      createdAt: new Date().toISOString(),
+      proofPath: null,
+      proofName: null,
+      stripeSessionId: session.id,
+    };
+
+    saveNotification(order);
+    res.json({ success: true, order, session });
+  } catch (error) {
+    console.error('Checkout session retrieval error:', error);
+    res.status(500).json({ success: false, error: error.message || 'Gagal memuat sesi checkout.' });
+  }
+});
 
 app.post('/checkout-notification', upload.single('proof'), (req, res) => {
   try {
@@ -48,6 +157,7 @@ app.post('/checkout-notification', upload.single('proof'), (req, res) => {
       createdAt: req.body.createdAt || new Date().toISOString(),
       proofPath: req.file ? `/uploads/${req.file.filename}` : null,
       proofName: req.file ? req.file.originalname : null,
+      stripeSessionId: req.body.stripeSessionId || null,
     };
     saveNotification(notification);
     console.log('Notifikasi checkout baru:', notification);

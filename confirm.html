@@ -56,7 +56,9 @@
   <script src="js/script.js"></script>
   <script>
     const confirmationContent = document.getElementById('confirmation-content');
-    const orderData = window.localStorage.getItem('dimzjie_last_order');
+    const storedOrderData = window.localStorage.getItem('dimzjie_last_order');
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
 
     function formatPrice(amount) {
       return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -95,17 +97,10 @@
             <p>Setelah melakukan transfer, konfirmasi melalui email atau chat yang tersedia.</p>
           `;
           break;
-        case 'QRIS':
-          instructions = '<p>Silakan bayar menggunakan QRIS melalui aplikasi dompet digital Anda. Scan kode QR di halaman konfirmasi yang akan Anda terima.</p>';
-          break;
-        case 'E-Wallet':
-          instructions = '<p>Silakan bayar melalui OVO, Dana, atau ShopeePay. Pastikan nominal sesuai dengan total pembayaran.</p>';
-          break;
-        case 'DANA Transfer':
+        case 'Stripe':
           instructions = `
-            <p>Silakan transfer ke nomor DANA <strong>082376890370</strong> dengan nominal yang sama persis seperti total pembayaran.</p>
-            <p>Bukalah aplikasi DANA atau scan QR pada halaman checkout untuk mempercepat proses.</p>
-            <p>Setelah transfer, simpan bukti atau screenshot transfer dan tunggu verifikasi dari tim kami sebelum pesanan dikirim.</p>
+            <p>Pembayaran Anda sudah berhasil diproses melalui Stripe.</p>
+            <p>Silakan tunggu email konfirmasi pembayaran dari Stripe dan cek riwayat pesanan untuk status lebih lanjut.</p>
           `;
           break;
         default:
@@ -126,7 +121,23 @@
       `;
     }
 
-    renderConfirmation(orderData ? JSON.parse(orderData) : null);
+    if (sessionId) {
+      fetch(`/checkout-session?sessionId=${encodeURIComponent(sessionId)}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success && data.order) {
+            renderConfirmation(data.order);
+            window.localStorage.removeItem('dimzjie_last_order');
+          } else {
+            renderConfirmation(storedOrderData ? JSON.parse(storedOrderData) : null);
+          }
+        })
+        .catch(() => {
+          renderConfirmation(storedOrderData ? JSON.parse(storedOrderData) : null);
+        });
+    } else {
+      renderConfirmation(storedOrderData ? JSON.parse(storedOrderData) : null);
+    }
   </script>
 </body>
 </html>
