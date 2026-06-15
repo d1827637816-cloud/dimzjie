@@ -23,6 +23,20 @@ function calculateCartTotal(cart) {
   return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 }
 
+function getOrderHistory() {
+  const stored = window.localStorage.getItem('dimzjie_order_history');
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveOrderHistory(history) {
+  window.localStorage.setItem('dimzjie_order_history', JSON.stringify(history));
+}
+
+function pushOrderHistory(order) {
+  const history = getOrderHistory();
+  history.unshift(order);
+  saveOrderHistory(history);
+}
 
 function renderCheckoutSummary() {
   const cart = getCart();
@@ -121,6 +135,7 @@ function handleCheckoutSubmit(event) {
   }
 
   const orderData = {
+    id: Date.now(),
     name: customerName.value,
     email: customerEmail.value,
     phone: customerPhone.value,
@@ -129,6 +144,8 @@ function handleCheckoutSubmit(event) {
     total: calculateCartTotal(cart),
     cart,
     transferredTo: TRANSFER_ACCOUNT,
+    transferAmount: transferAmountInput,
+    proofName: proofUpload?.files?.[0]?.name || null,
     status: 'menunggu konfirmasi',
     createdAt: new Date().toISOString(),
   };
@@ -157,6 +174,7 @@ function handleCheckoutSubmit(event) {
     .then(data => {
       if (data.success) {
         window.localStorage.setItem('dimzjie_last_order', JSON.stringify(orderData));
+        pushOrderHistory(orderData);
         clearCart();
         window.location.href = 'confirm.html';
       } else {
