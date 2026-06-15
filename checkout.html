@@ -46,10 +46,17 @@
               <textarea id="customer-address" required placeholder="Alamat lengkap untuk pengiriman"></textarea>
             </label>
             <div class="payment-methods">
-              <span class="payment-label">Metode Pembayaran</span>
+              <span class="payment-label">Transfer DANA</span>
               <div class="payment-note">
                 Transfer DANA ke nomor <strong>082376890370</strong> sebelum menekan tombol konfirmasi.
               </div>
+              <div class="transfer-amount-note">
+                Nominal yang harus ditransfer: <strong id="transfer-amount-label">Rp0</strong>
+              </div>
+              <label>
+                Masukkan nominal transfer yang Anda kirimkan
+                <input type="number" id="transfer-amount" required placeholder="Masukkan nominal transfer" />
+              </label>
               <label><input type="checkbox" id="confirm-transfer" /> Saya sudah transfer ke DANA 082376890370</label>
             </div>
             <button type="submit" class="btn btn-primary">Konfirmasi Transfer</button>

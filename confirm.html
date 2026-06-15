@@ -100,6 +100,12 @@
         case 'E-Wallet':
           instructions = '<p>Silakan bayar melalui OVO, Dana, atau ShopeePay. Pastikan nominal sesuai dengan total pembayaran.</p>';
           break;
+        case 'DANA Transfer':
+          instructions = `
+            <p>Silakan transfer ke nomor DANA <strong>082376890370</strong> dengan nominal yang sama persis seperti total pembayaran.</p>
+            <p>Setelah transfer, simpan bukti atau screenshot transfer untuk konfirmasi pesanan.</p>
+          `;
+          break;
         default:
           instructions = '<p>Pilih metode pembayaran yang tersedia.</p>';
       }

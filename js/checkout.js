@@ -4,6 +4,8 @@ const customerName = document.getElementById('customer-name');
 const customerEmail = document.getElementById('customer-email');
 const customerPhone = document.getElementById('customer-phone');
 const customerAddress = document.getElementById('customer-address');
+const transferAmountEl = document.getElementById('transfer-amount');
+const transferAmountLabel = document.getElementById('transfer-amount-label');
 
 const CART_KEY = 'dimzjie_cart';
 
@@ -49,9 +51,13 @@ function renderCheckoutSummary() {
       <span>${formatPrice(total)}</span>
     </div>
     <div class="checkout-instructions">
-      <p>Pilih metode pembayaran lalu klik "Bayar dan Konfirmasi". Setelah itu Anda akan menerima instruksi pembayaran.</p>
+      <p>Silakan transfer jumlah sama persis sebelum klik konfirmasi transfer.</p>
     </div>
   `;
+
+  if (transferAmountLabel) {
+    transferAmountLabel.textContent = formatPrice(total);
+  }
 }
 
 function clearCart() {
@@ -73,8 +79,16 @@ function handleCheckoutSubmit(event) {
   }
 
   const confirmTransfer = document.getElementById('confirm-transfer');
+  const transferAmountInput = transferAmountEl ? Number(transferAmountEl.value) : 0;
+  const totalAmount = calculateCartTotal(cart);
+
   if (!confirmTransfer?.checked) {
     alert('Silakan konfirmasi bahwa Anda sudah transfer ke nomor DANA 082376890370.');
+    return;
+  }
+
+  if (!transferAmountInput || transferAmountInput !== totalAmount) {
+    alert(`Nominal transfer harus sama dengan total belanja: ${formatPrice(totalAmount)}.`);
     return;
   }
 

@@ -399,12 +399,31 @@ img {
   font-weight: 700;
 }
 
+.payment-note,
+.transfer-amount-note {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
 .payment-methods label {
   display: flex;
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 0.75rem;
   cursor: pointer;
+}
+
+.payment-methods input[type="number"] {
+  width: 100%;
+  max-width: 100%;
+  padding: 0.95rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  margin-top: 0.5rem;
 }
 
 .checkout-items,
