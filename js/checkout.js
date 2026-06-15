@@ -9,12 +9,14 @@ const transferAmountLabel = document.getElementById('transfer-amount-label');
 const proofUpload = document.getElementById('proof-upload');
 const danaButton = document.getElementById('open-dana-app');
 const danaQrImage = document.getElementById('dana-qr');
+const danaQrSourceInput = document.getElementById('dana-qr-source');
+const generateDanaQrButton = document.getElementById('generate-dana-qr');
 
 const CART_KEY = 'dimzjie_cart';
 const DANA_ACCOUNT = '082376890370';
-// Bisa diganti dengan URL langsung ke gambar QR code jika ingin pakai link.
-// Contoh: 'https://example.com/qr-code.jpg'
-const DANA_QR_IMAGE = 'images/dana-qr.jpg';
+const DEFAULT_DANA_QR_IMAGE = 'images/dana-qr.jpg';
+const DANA_QR_SOURCE_STORAGE = 'dimzjie_dana_qr_source';
+const QR_GENERATOR_API = 'https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=';
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -27,6 +29,56 @@ function getCart() {
 
 function calculateCartTotal(cart) {
   return cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+}
+
+function getStoredDanaQrSource() {
+  return window.localStorage.getItem(DANA_QR_SOURCE_STORAGE) || '';
+}
+
+function saveStoredDanaQrSource(value) {
+  if (value) {
+    window.localStorage.setItem(DANA_QR_SOURCE_STORAGE, value);
+  } else {
+    window.localStorage.removeItem(DANA_QR_SOURCE_STORAGE);
+  }
+}
+
+function getActiveDanaQrSource() {
+  return getStoredDanaQrSource() || `DANA ${DANA_ACCOUNT}`;
+}
+
+function setDanaQrImageSource(src) {
+  if (!danaQrImage) return;
+  danaQrImage.src = src;
+}
+
+function getQrImageSource(value) {
+  if (!value) {
+    return DEFAULT_DANA_QR_IMAGE;
+  }
+
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `${QR_GENERATOR_API}${encodeURIComponent(trimmed)}`;
+}
+
+function updateDanaQrImage() {
+  const sourceValue = danaQrSourceInput?.value.trim();
+  if (!danaQrImage) return;
+
+  const imageSrc = getQrImageSource(sourceValue || `DANA ${DANA_ACCOUNT}`);
+  setDanaQrImageSource(imageSrc);
+  saveStoredDanaQrSource(sourceValue || '');
+}
+
+function loadSavedDanaQrSource() {
+  const storedSource = getStoredDanaQrSource();
+  if (danaQrSourceInput) {
+    danaQrSourceInput.value = storedSource || `DANA ${DANA_ACCOUNT}`;
+  }
 }
 
 function renderCheckoutSummary() {
@@ -93,10 +145,42 @@ function renderDanaPaymentInfo(total) {
     danaButton.textContent = `Buka DANA dan transfer ke ${DANA_ACCOUNT}`;
   }
 
+  if (danaQrSourceInput) {
+    danaQrSourceInput.value = getActiveDanaQrSource();
+  }
+
   if (danaQrImage) {
-    danaQrImage.src = DANA_QR_IMAGE;
+    danaQrImage.src = getQrImageSource(getActiveDanaQrSource());
     danaQrImage.alt = `QR Code transfer DANA ke ${DANA_ACCOUNT} sejumlah ${formatPrice(total)}`;
   }
+}
+
+if (generateDanaQrButton) {
+  generateDanaQrButton.addEventListener('click', updateDanaQrImage);
+}
+
+function getQrImageSource(value) {
+  if (!value) {
+    return DANA_QR_IMAGE;
+  }
+
+  const trimmed = value.trim();
+  if (/^https?:\/\//i.test(trimmed)) {
+    return trimmed;
+  }
+
+  return `${QR_GENERATOR_API}${encodeURIComponent(trimmed)}`;
+}
+
+function updateDanaQrImage() {
+  const sourceValue = danaQrSourceInput?.value?.trim();
+  if (!danaQrImage) return;
+
+  danaQrImage.src = getQrImageSource(sourceValue || `DANA ${DANA_ACCOUNT}`);
+}
+
+if (generateDanaQrButton) {
+  generateDanaQrButton.addEventListener('click', updateDanaQrImage);
 }
 
 function clearCart() {
@@ -185,5 +269,7 @@ function handleCheckoutSubmit(event) {
     });
 }
 
+loadSavedDanaQr();
 renderCheckoutSummary();
 checkoutForm?.addEventListener('submit', handleCheckoutSubmit);
+danaQrUpdateButton?.addEventListener('click', updateDanaQrFromInputs);

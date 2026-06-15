@@ -56,6 +56,14 @@
               </div>
               <div class="dana-payment-actions">
                 <a id="open-dana-app" class="btn btn-secondary dana-button" target="_blank" rel="noopener noreferrer">Buka DANA dan Transfer</a>
+                <div class="dana-qr-controls">
+                  <label>
+                    Teks / URL QR
+                    <input type="text" id="dana-qr-source" placeholder="Masukkan teks atau URL QR" />
+                  </label>
+                  <button type="button" id="generate-dana-qr" class="btn btn-secondary">Perbarui QR</button>
+                  <small>Masukkan teks atau URL lalu tekan Perbarui QR untuk menghasilkan barcode otomatis.</small>
+                </div>
                 <div class="dana-qr-code">
                   <img id="dana-qr" alt="QR Code DANA transfer" src="https://sg.docworkspace.com/d/sbPaeomMJtFbZlzW_w5qjgdqbg5ybohur8l?sa=601.1245" />
                   <small>Scan QR ini di aplikasi DANA untuk memudahkan transfer.</small>
