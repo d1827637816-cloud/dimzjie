@@ -783,9 +783,10 @@ img {
 
 .dana-qr-code img {
   width: 100%;
-  max-width: 280px;
+  max-width: 260px;
   height: auto;
   border-radius: 1rem;
+  object-fit: contain;
 }
 
 .dana-qr-code small {
