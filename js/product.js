@@ -96,7 +96,11 @@ function loadProduct() {
   })();
 
   fetch(`${API_BASE_URL}/products`)
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) throw new Error('Backend tidak tersedia');
+      return response.json();
+    })
+    .catch(() => fetch('data/products.json').then(response => response.json()))
     .then(products => {
       const items = Array.isArray(products) ? products : [];
       const product = items.find(item => item.slug === slug) || items[0];

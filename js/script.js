@@ -21,7 +21,11 @@ function loadHomepageProducts() {
   if (!productGrid) return;
 
   fetch(`${API_BASE_URL}/products`)
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) throw new Error('Backend tidak tersedia');
+      return response.json();
+    })
+    .catch(() => fetch('data/products.json').then(response => response.json()))
     .then(products => {
       const recommendedProducts = Array.isArray(products) ? products.slice(0, 3) : [];
       productGrid.innerHTML = recommendedProducts.map(product => `

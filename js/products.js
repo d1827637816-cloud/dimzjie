@@ -19,7 +19,11 @@ function loadAllProducts() {
   })();
 
   fetch(`${API_BASE_URL}/products`)
-    .then(response => response.json())
+    .then(response => {
+      if (!response.ok) throw new Error('Backend tidak tersedia');
+      return response.json();
+    })
+    .catch(() => fetch('data/products.json').then(response => response.json()))
     .then(products => {
       allProducts = Array.isArray(products) ? products : [];
       renderProducts();

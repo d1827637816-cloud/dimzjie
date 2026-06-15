@@ -386,8 +386,12 @@ function renderProductPage() {
 
 function loadProductList() {
   if (!adminProductList) return;
-  fetch('/products')
-    .then(r => r.json())
+  fetch(`${API_BASE_URL}/products`)
+    .then(response => {
+      if (!response.ok) throw new Error('Backend tidak tersedia');
+      return response.json();
+    })
+    .catch(() => fetch('data/products.json').then(response => response.json()))
     .then(products => {
       productsCache = Array.isArray(products) ? products : [];
       currentProductPage = 1;

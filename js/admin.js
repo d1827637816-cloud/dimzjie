@@ -149,7 +149,11 @@ function loadLatestProducts(limit = 6) {
   if (!latestProductsEl) return;
   latestProductsEl.innerHTML = '<p>Memuat produk terbaru...</p>';
   fetch(`${API_BASE_URL}/products`)
-    .then(resp => resp.json())
+    .then(response => {
+      if (!response.ok) throw new Error('Backend tidak tersedia');
+      return response.json();
+    })
+    .catch(() => fetch('data/products.json').then(response => response.json()))
     .then(products => {
       const sorted = Array.isArray(products) ? products.slice().sort((a, b) => b.id - a.id) : [];
       renderLatestProducts(sorted.slice(0, limit));
