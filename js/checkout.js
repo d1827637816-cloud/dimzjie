@@ -117,7 +117,7 @@ function handleCheckoutSubmit(event) {
 
   const confirmTransfer = document.getElementById('confirm-transfer');
   const transferAmountInputRaw = transferAmountEl ? transferAmountEl.value : '';
-  const transferAmountInput = transferAmountInputRaw ? parseInt(transferAmountInputRaw.replace(/\D/g, ''), 10) : 0;
+  const transferAmountInput = transferAmountInputRaw ? parseInt(transferAmountInputRaw.replace(/[^0-9]/g, ''), 10) : 0;
   const totalAmount = calculateCartTotal(cart);
 
   if (!confirmTransfer?.checked) {
