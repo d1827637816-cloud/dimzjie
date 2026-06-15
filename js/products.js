@@ -8,6 +8,18 @@ const API_BASE_URL = (() => {
   return 'http://localhost:3000';
 })();
 const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
+const PRODUCTS_LOCAL_KEY = 'dimzjie_local_products';
+
+function getLocalProducts() {
+  const stored = window.localStorage.getItem(PRODUCTS_LOCAL_KEY);
+  return stored ? JSON.parse(stored) : [];
+}
+
+function mergeProducts(products) {
+  const base = Array.isArray(products) ? products : [];
+  const local = getLocalProducts();
+  return [...local, ...base];
+}
 
 let allProducts = [];
 let activeFilter = 'all';
@@ -31,7 +43,7 @@ function loadAllProducts() {
     })
     .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
     .then(products => {
-      allProducts = Array.isArray(products) ? products : [];
+      allProducts = mergeProducts(products);
       renderProducts();
     })
     .catch(() => {

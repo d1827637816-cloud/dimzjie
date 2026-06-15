@@ -95,12 +95,18 @@ function loadProduct() {
     return 'http://localhost:3000';
   })();
   const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
+const PRODUCTS_LOCAL_KEY = 'dimzjie_local_products';
 
-  fetch(`${API_BASE_URL}/products`)
-    .then(response => {
-      if (!response.ok) throw new Error('Backend tidak tersedia');
-      return response.json();
-    })
+function getLocalProducts() {
+  const stored = window.localStorage.getItem(PRODUCTS_LOCAL_KEY);
+  return stored ? JSON.parse(stored) : [];
+}
+
+function mergeProducts(products) {
+  const base = Array.isArray(products) ? products : [];
+  const local = getLocalProducts();
+  return [...local, ...base];
+}
     .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
     .then(products => {
       const items = Array.isArray(products) ? products : [];
