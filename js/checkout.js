@@ -116,7 +116,8 @@ function handleCheckoutSubmit(event) {
   }
 
   const confirmTransfer = document.getElementById('confirm-transfer');
-  const transferAmountInput = transferAmountEl ? Number(transferAmountEl.value) : 0;
+  const transferAmountInputRaw = transferAmountEl ? transferAmountEl.value : '';
+  const transferAmountInput = transferAmountInputRaw ? parseInt(transferAmountInputRaw.replace(/\D/g, ''), 10) : 0;
   const totalAmount = calculateCartTotal(cart);
 
   if (!confirmTransfer?.checked) {
@@ -124,8 +125,8 @@ function handleCheckoutSubmit(event) {
     return;
   }
 
-  if (!transferAmountInput || transferAmountInput !== totalAmount) {
-    alert(`Nominal transfer harus sama dengan total belanja: ${formatPrice(totalAmount)}.`);
+  if (!transferAmountInput || transferAmountInput < totalAmount) {
+    alert(`Nominal transfer harus minimal sama dengan total belanja: ${formatPrice(totalAmount)}.`);
     return;
   }
 
