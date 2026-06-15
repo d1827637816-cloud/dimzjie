@@ -6,8 +6,12 @@ const customerPhone = document.getElementById('customer-phone');
 const customerAddress = document.getElementById('customer-address');
 const transferAmountEl = document.getElementById('transfer-amount');
 const transferAmountLabel = document.getElementById('transfer-amount-label');
+const proofUpload = document.getElementById('proof-upload');
+const danaButton = document.getElementById('open-dana-app');
+const danaQrImage = document.getElementById('dana-qr');
 
 const CART_KEY = 'dimzjie_cart';
+const DANA_ACCOUNT = '082376890370';
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -51,12 +55,28 @@ function renderCheckoutSummary() {
       <span>${formatPrice(total)}</span>
     </div>
     <div class="checkout-instructions">
-      <p>Silakan transfer jumlah sama persis sebelum klik konfirmasi transfer.</p>
+      <p>Silakan transfer jumlah yang sama persis ke akun DANA di bawah sebelum konfirmasi.</p>
     </div>
   `;
 
+  renderDanaPaymentInfo(total);
+}
+
+function renderDanaPaymentInfo(total) {
   if (transferAmountLabel) {
     transferAmountLabel.textContent = formatPrice(total);
+  }
+
+  const danaUrl = 'https://m.dana.id/';
+  if (danaButton) {
+    danaButton.href = danaUrl;
+    danaButton.textContent = `Buka DANA dan transfer ke ${DANA_ACCOUNT}`;
+  }
+
+  if (danaQrImage) {
+    const qrText = encodeURIComponent(`DANA Transfer | Nomor: ${DANA_ACCOUNT} | Jumlah: ${formatPrice(total)}`);
+    danaQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${qrText}`;
+    danaQrImage.alt = `QR Code transfer DANA ke ${DANA_ACCOUNT} sejumlah ${formatPrice(total)}`;
   }
 }
 
@@ -92,6 +112,11 @@ function handleCheckoutSubmit(event) {
     return;
   }
 
+  if (!proofUpload?.files?.length) {
+    alert('Unggah bukti transfer terlebih dahulu sebelum mengonfirmasi pesanan.');
+    return;
+  }
+
   const orderData = {
     name: customerName.value,
     email: customerEmail.value,
@@ -100,17 +125,30 @@ function handleCheckoutSubmit(event) {
     paymentMethod: 'DANA Transfer',
     total: calculateCartTotal(cart),
     cart,
-    transferredTo: '082376890370',
+    transferredTo: DANA_ACCOUNT,
     status: 'menunggu konfirmasi',
     createdAt: new Date().toISOString(),
   };
 
+  const formData = new FormData();
+  formData.append('name', orderData.name);
+  formData.append('email', orderData.email);
+  formData.append('phone', orderData.phone);
+  formData.append('address', orderData.address);
+  formData.append('paymentMethod', orderData.paymentMethod);
+  formData.append('total', orderData.total);
+  formData.append('cart', JSON.stringify(orderData.cart));
+  formData.append('transferredTo', orderData.transferredTo);
+  formData.append('status', orderData.status);
+  formData.append('createdAt', orderData.createdAt);
+  formData.append('transferAmount', transferAmountInput);
+  if (proofUpload?.files?.[0]) {
+    formData.append('proof', proofUpload.files[0]);
+  }
+
   fetch('/checkout-notification', {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(orderData),
+    body: formData,
   })
     .then(response => response.json())
     .then(data => {

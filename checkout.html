@@ -53,13 +53,24 @@
               <div class="transfer-amount-note">
                 Nominal yang harus ditransfer: <strong id="transfer-amount-label">Rp0</strong>
               </div>
+              <div class="dana-payment-actions">
+                <a id="open-dana-app" class="btn btn-secondary dana-button" target="_blank" rel="noopener noreferrer">Buka DANA dan Transfer</a>
+                <div class="dana-qr-code">
+                  <img id="dana-qr" alt="QR Code DANA transfer" src="" />
+                  <small>Scan QR ini di aplikasi DANA untuk memudahkan transfer.</small>
+                </div>
+              </div>
               <label>
                 Masukkan nominal transfer yang Anda kirimkan
                 <input type="number" id="transfer-amount" required placeholder="Masukkan nominal transfer" />
               </label>
-              <label><input type="checkbox" id="confirm-transfer" /> Saya sudah transfer ke DANA 082376890370</label>
+              <label>
+                Unggah bukti transfer (screenshot atau foto struk)
+                <input type="file" id="proof-upload" accept="image/*" required />
+              </label>
+              <label><input type="checkbox" id="confirm-transfer" /> Saya sudah transfer ke DANA 082376890370 dan mengunggah bukti transfer</label>
             </div>
-            <button type="submit" class="btn btn-primary">Konfirmasi Transfer</button>
+            <button type="submit" class="btn btn-primary">Konfirmasi Pesanan</button>
           </form>
         </div>
         <div class="checkout-summary-box">

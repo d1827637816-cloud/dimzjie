@@ -30,6 +30,7 @@ function renderNotifications(data) {
         <div><strong>Total:</strong> ${formatPrice(item.total)}</div>
         <div><strong>Dibuat:</strong> ${new Date(item.createdAt).toLocaleString('id-ID')}</div>
       </div>
+      ${item.proofPath ? `<div class="notification-row"><div><strong>Bukti Transfer:</strong> <a href="${item.proofPath}" target="_blank" rel="noopener noreferrer">${item.proofName || 'Lihat bukti'}</a></div></div>` : ''}
       <div class="notification-message">
         <strong>Alamat:</strong> ${item.address}
       </div>
