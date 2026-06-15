@@ -57,14 +57,20 @@ function renderNotifications(data) {
   adminNotifications.innerHTML = rows;
 }
 
-fetch('/checkout-notifications')
-  .then(response => response.json())
-  .then(data => renderNotifications(data))
-  .catch(() => {
-    if (adminNotifications) {
-      adminNotifications.innerHTML = '<p>Gagal memuat notifikasi. Pastikan server Node dijalankan dengan <code>npm start</code> dan buka halaman lewat <strong>http://localhost:3000</strong>.</p>';
-    }
-  });
+function loadNotifications() {
+  fetch('/checkout-notifications')
+    .then(response => response.json())
+    .then(data => renderNotifications(data))
+    .catch(() => {
+      if (adminNotifications) {
+        adminNotifications.innerHTML = '<p>Gagal memuat notifikasi. Pastikan server Node dijalankan dengan <code>npm start</code> dan buka halaman lewat <strong>http://localhost:3000</strong>.</p>';
+      }
+    });
+}
+
+// initial load and periodic refresh so admin sees new orders
+loadNotifications();
+setInterval(loadNotifications, 10 * 1000);
 function createSlug(value) {
   return value
     .toLowerCase()

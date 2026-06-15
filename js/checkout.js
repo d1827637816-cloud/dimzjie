@@ -124,6 +124,62 @@ function completeCheckout(orderData) {
   window.location.href = 'confirm.html';
 }
 
+// Pending notifications queue (stored in localStorage)
+function getPendingNotifications() {
+  const stored = window.localStorage.getItem('dimzjie_pending_notifications');
+  return stored ? JSON.parse(stored) : [];
+}
+
+function savePendingNotifications(list) {
+  window.localStorage.setItem('dimzjie_pending_notifications', JSON.stringify(list));
+}
+
+function enqueuePendingNotification(notification) {
+  const list = getPendingNotifications();
+  list.push(notification);
+  savePendingNotifications(list);
+}
+
+function sendPendingNotifications() {
+  const list = getPendingNotifications();
+  if (!list || list.length === 0) return Promise.resolve();
+
+  // try sending them sequentially
+  return list.reduce((prev, item) => {
+    return prev.then(() => {
+      const fd = new FormData();
+      fd.append('name', item.name);
+      fd.append('email', item.email);
+      fd.append('phone', item.phone);
+      fd.append('address', item.address);
+      fd.append('paymentMethod', item.paymentMethod);
+      fd.append('total', item.total);
+      fd.append('cart', JSON.stringify(item.cart));
+      fd.append('transferredTo', item.transferredTo);
+      fd.append('status', item.status);
+      fd.append('createdAt', item.createdAt);
+      fd.append('transferAmount', item.transferAmount || 0);
+
+      return fetch('/checkout-notification', { method: 'POST', body: fd })
+        .then(res => {
+          if (!res.ok) throw new Error('server error');
+          return res.json();
+        })
+        .then(data => {
+          if (data && data.success) {
+            // remove this item from pending
+            const remaining = getPendingNotifications().filter(n => n.createdAt !== item.createdAt || n.total !== item.total);
+            savePendingNotifications(remaining);
+          } else {
+            throw new Error('server rejected');
+          }
+        });
+    });
+  }, Promise.resolve()).catch(err => {
+    console.warn('Some pending notifications could not be sent yet.', err);
+  });
+}
+
 function handleCheckoutSubmit(event) {
   event.preventDefault();
 
@@ -206,10 +262,18 @@ function handleCheckoutSubmit(event) {
       }
     })
     .catch(error => {
-      console.warn('Checkout notification gagal, menggunakan fallback lokal.', error);
+      console.warn('Checkout notification gagal, menambahkan ke antrean pending dan menyelesaikan order secara lokal.', error);
+      // enqueue the notification for later retry
+      enqueuePendingNotification(orderData);
       completeCheckout(orderData);
     });
 }
 
 renderCheckoutSummary();
 checkoutForm?.addEventListener('submit', handleCheckoutSubmit);
+
+// attempt to send pending notifications on page load and periodically
+sendPendingNotifications();
+setInterval(() => {
+  sendPendingNotifications();
+}, 30 * 1000);
