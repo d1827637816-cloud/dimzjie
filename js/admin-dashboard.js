@@ -23,6 +23,8 @@ const API_BASE_URL = (() => {
   if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
   return 'http://localhost:3000';
 })();
+const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
+const PRODUCTS_LOCAL_KEY = 'dimzjie_local_products';
 const productPrevBtn = document.getElementById('product-prev');
 const productNextBtn = document.getElementById('product-next');
 const productPageInfo = document.getElementById('product-page-info');
@@ -63,6 +65,37 @@ function displayProductFormMessage(message, type = 'success') {
   if (!productFormMessage) return;
   productFormMessage.textContent = message;
   productFormMessage.className = `product-form-message ${type}`;
+}
+
+function getLocalProducts() {
+  const stored = window.localStorage.getItem(PRODUCTS_LOCAL_KEY);
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveLocalProducts(products) {
+  window.localStorage.setItem(PRODUCTS_LOCAL_KEY, JSON.stringify(products));
+}
+
+function mergeProducts(products) {
+  const base = Array.isArray(products) ? products : [];
+  const local = getLocalProducts();
+  const merged = [...base, ...local];
+  return merged;
+}
+
+function imageFileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+function addLocalProduct(product) {
+  const products = getLocalProducts();
+  products.unshift(product);
+  saveLocalProducts(products);
 }
 
 function renderPurchaseHistory(data) {
@@ -272,12 +305,12 @@ function loadGoogleMaps(apiKey) {
   });
 }
 
-async function updateOrderShipment(id, stage, status, location) {
+async async function updateOrderShipment(id, stage, status, location) {
   try {
     const body = { shipmentStage: stage, status };
     if (location) body.location = location;
 
-    const response = await fetch(`/checkout-notification/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/checkout-notification/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),
@@ -412,8 +445,12 @@ function resetProductForm() {
 }
 
 function startEditProduct(id) {
-  fetch('/products')
-    .then(r => r.json())
+  fetch(`${API_BASE_URL}/products`)
+    .then(response => {
+      if (!response.ok) throw new Error('Backend tidak tersedia');
+      return response.json();
+    })
+    .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
     .then(products => {
       const p = (Array.isArray(products) ? products : []).find(x => x.id === id);
       if (!p) {
@@ -491,11 +528,42 @@ function handleAddProductSubmit(event) {
         loadPurchaseHistory();
         loadOrders();
       } else {
-        displayProductFormMessage(data.error || 'Gagal menyimpan produk.', 'error');
+        throw new Error(data.error || 'Gagal menyimpan produk.');
       }
     })
-    .catch(() => {
-      displayProductFormMessage('Terjadi kesalahan saat mengirim data produk.', 'error');
+    .catch(async () => {
+      const fallbackImage = imageUrl || (imageFile ? await imageFileToDataUrl(imageFile) : '');
+      if (!fallbackImage) {
+        displayProductFormMessage('Backend tidak tersedia dan gambar tidak dapat disimpan secara lokal. Gunakan URL gambar atau jalankan server.', 'error');
+        return;
+      }
+      const localProduct = {
+        id: Date.now(),
+        name,
+        price,
+        category,
+        slug,
+        description,
+        features,
+        image: fallbackImage,
+      };
+      if (editingProductId) {
+        const products = mergeProducts([]);
+        const index = products.findIndex(p => p.id === editingProductId);
+        if (index !== -1) {
+          products[index] = { ...products[index], ...localProduct };
+          saveLocalProducts(products);
+        } else {
+          addLocalProduct(localProduct);
+        }
+      } else {
+        addLocalProduct(localProduct);
+      }
+      displayProductFormMessage(editingProductId ? 'Perubahan produk disimpan secara lokal.' : 'Produk berhasil ditambahkan secara lokal.', 'success');
+      resetProductForm();
+      loadProductList();
+      loadPurchaseHistory();
+      loadOrders();
     });
 }
 

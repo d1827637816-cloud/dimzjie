@@ -15,6 +15,8 @@ const API_BASE_URL = (() => {
   if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
   return 'http://localhost:3000';
 })();
+const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
+const PRODUCTS_LOCAL_KEY = 'dimzjie_local_products';
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -24,6 +26,30 @@ function displayProductFormMessage(message, type = 'success') {
   if (!productFormMessage) return;
   productFormMessage.textContent = message;
   productFormMessage.className = `product-form-message ${type}`;
+}
+
+function getLocalProducts() {
+  const stored = window.localStorage.getItem(PRODUCTS_LOCAL_KEY);
+  return stored ? JSON.parse(stored) : [];
+}
+
+function saveLocalProducts(products) {
+  window.localStorage.setItem(PRODUCTS_LOCAL_KEY, JSON.stringify(products));
+}
+
+function addLocalProduct(product) {
+  const products = getLocalProducts();
+  products.unshift(product);
+  saveLocalProducts(products);
+}
+
+function imageFileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 function renderNotifications(data) {
@@ -135,11 +161,29 @@ function handleAddProductSubmit(event) {
         addProductForm.reset();
         loadLatestProducts();
       } else {
-        displayProductFormMessage(data.error || 'Gagal menambahkan produk.', 'error');
+        throw new Error(data.error || 'Gagal menambahkan produk.');
       }
     })
-    .catch(() => {
-      displayProductFormMessage('Terjadi kesalahan saat mengirim data produk.', 'error');
+    .catch(async () => {
+      const fallbackImage = imageUrl || (imageFile ? await imageFileToDataUrl(imageFile) : '');
+      if (!fallbackImage) {
+        displayProductFormMessage('Backend tidak tersedia dan gambar tidak dapat disimpan secara lokal. Gunakan URL gambar atau jalankan server.', 'error');
+        return;
+      }
+      const localProduct = {
+        id: Date.now(),
+        name,
+        price,
+        category,
+        slug,
+        description,
+        features,
+        image: fallbackImage,
+      };
+      addLocalProduct(localProduct);
+      displayProductFormMessage('Produk berhasil ditambahkan secara lokal.', 'success');
+      addProductForm.reset();
+      loadLatestProducts();
     });
 }
 
@@ -153,8 +197,10 @@ function loadLatestProducts(limit = 6) {
       if (!response.ok) throw new Error('Backend tidak tersedia');
       return response.json();
     })
-    .catch(() => fetch('data/products.json').then(response => response.json()))
+    .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
     .then(products => {
+      const local = getLocalProducts();
+      const merged = Array.isArray(products) ? [...local, ...products] : local;
       const sorted = Array.isArray(products) ? products.slice().sort((a, b) => b.id - a.id) : [];
       renderLatestProducts(sorted.slice(0, limit));
     })
