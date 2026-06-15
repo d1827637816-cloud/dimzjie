@@ -7,10 +7,8 @@ const customerAddress = document.getElementById('customer-address');
 const transferAmountEl = document.getElementById('transfer-amount');
 const transferAmountLabel = document.getElementById('transfer-amount-label');
 const proofUpload = document.getElementById('proof-upload');
-const danaButton = document.getElementById('open-dana-app');
-
 const CART_KEY = 'dimzjie_cart';
-const DANA_ACCOUNT = '082376890370';
+const TRANSFER_ACCOUNT = '082376890370';
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -58,7 +56,7 @@ function renderCheckoutSummary() {
       <span>${formatPrice(total)}</span>
     </div>
     <div class="checkout-instructions">
-      <p>Silakan transfer jumlah yang sama persis ke akun DANA di bawah sebelum konfirmasi.</p>
+      <p>Silakan transfer jumlah yang sama persis sebelum konfirmasi.</p>
     </div>
   `;
 
@@ -69,7 +67,7 @@ function renderCheckoutSummary() {
     });
   });
 
-  renderDanaPaymentInfo(total);
+  renderPaymentInfo(total);
 }
 
 function removeFromCart(productId) {
@@ -79,15 +77,9 @@ function removeFromCart(productId) {
   renderCheckoutSummary();
 }
 
-function renderDanaPaymentInfo(total) {
+function renderPaymentInfo(total) {
   if (transferAmountLabel) {
     transferAmountLabel.textContent = formatPrice(total);
-  }
-
-  const danaUrl = 'https://m.dana.id/';
-  if (danaButton) {
-    danaButton.href = danaUrl;
-    danaButton.textContent = `Buka DANA dan transfer ke ${DANA_ACCOUNT}`;
   }
 }
 
@@ -114,7 +106,7 @@ function handleCheckoutSubmit(event) {
   const totalAmount = calculateCartTotal(cart);
 
   if (!confirmTransfer?.checked) {
-    alert('Silakan konfirmasi bahwa Anda sudah transfer ke nomor DANA 082376890370.');
+    alert('Silakan konfirmasi bahwa Anda sudah transfer dan mengunggah bukti transfer.');
     return;
   }
 
@@ -133,10 +125,10 @@ function handleCheckoutSubmit(event) {
     email: customerEmail.value,
     phone: customerPhone.value,
     address: customerAddress.value,
-    paymentMethod: 'DANA Transfer',
+    paymentMethod: 'Transfer',
     total: calculateCartTotal(cart),
     cart,
-    transferredTo: DANA_ACCOUNT,
+    transferredTo: TRANSFER_ACCOUNT,
     status: 'menunggu konfirmasi',
     createdAt: new Date().toISOString(),
   };
