@@ -8,6 +8,7 @@ const addToCartButton = document.getElementById('add-to-cart');
 const cartContentEl = document.getElementById('cart-content');
 
 const CART_KEY = 'dimzjie_cart';
+const PRODUCTS_LOCAL_KEY = 'dimzjie_local_products';
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -22,8 +23,21 @@ function saveCart(cart) {
   window.localStorage.setItem(CART_KEY, JSON.stringify(cart));
 }
 
+function getLocalProducts() {
+  const stored = window.localStorage.getItem(PRODUCTS_LOCAL_KEY);
+  return stored ? JSON.parse(stored) : [];
+}
+
+function mergeProducts(products) {
+  const base = Array.isArray(products) ? products : [];
+  const local = getLocalProducts();
+  return [...local, ...base];
+}
+
 function renderCart() {
   const cart = getCart();
+
+  if (!cartContentEl) return;
 
   if (cart.length === 0) {
     cartContentEl.innerHTML = '<p>Keranjang kosong. Tambahkan produk untuk mulai belanja.</p>';
@@ -94,40 +108,46 @@ function loadProduct() {
     if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
     return 'http://localhost:3000';
   })();
+
   const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
-const PRODUCTS_LOCAL_KEY = 'dimzjie_local_products';
 
-function getLocalProducts() {
-  const stored = window.localStorage.getItem(PRODUCTS_LOCAL_KEY);
-  return stored ? JSON.parse(stored) : [];
-}
-
-function mergeProducts(products) {
-  const base = Array.isArray(products) ? products : [];
-  const local = getLocalProducts();
-  return [...local, ...base];
-}
+  fetch(`${API_BASE_URL}/products`)
+    .then(response => {
+      if (!response.ok) throw new Error('Backend tidak tersedia');
+      return response.json();
+    })
     .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
+    .then(products => mergeProducts(products))
     .then(products => {
-      const items = Array.isArray(products) ? products : [];
-      const product = items.find(item => item.slug === slug) || items[0];
+      const product = Array.isArray(products)
+        ? products.find(item => item.slug === slug) || products[0]
+        : null;
+
       if (!product) {
         throw new Error('Produk tidak ditemukan');
       }
-      productNameEl.textContent = product.name;
-      productImageEl.src = product.image;
-      productImageEl.alt = product.name;
-      productDescriptionEl.textContent = product.description;
-      productCategoryEl.textContent = product.category;
-      productPriceEl.textContent = formatPrice(product.price);
-      productFeaturesEl.innerHTML = (product.features || []).map(feature => `<li>${feature}</li>`).join('');
 
-      addToCartButton.addEventListener('click', () => updateCart(product));
+      if (productNameEl) productNameEl.textContent = product.name || 'Produk Tidak Ditemukan';
+      if (productImageEl) {
+        productImageEl.src = product.image || '';
+        productImageEl.alt = product.name || 'Detail produk';
+      }
+      if (productDescriptionEl) productDescriptionEl.textContent = product.description || '';
+      if (productCategoryEl) productCategoryEl.textContent = product.category || '';
+      if (productPriceEl) productPriceEl.textContent = formatPrice(product.price || 0);
+      if (productFeaturesEl) {
+        productFeaturesEl.innerHTML = (product.features || []).map(feature => `<li>${feature}</li>`).join('');
+      }
+
+      if (addToCartButton) {
+        addToCartButton.disabled = false;
+        addToCartButton.addEventListener('click', () => updateCart(product));
+      }
     })
     .catch(() => {
-      productNameEl.textContent = 'Produk tidak tersedia';
-      productDescriptionEl.textContent = 'Silakan kembali dan pilih produk lain.';
-      addToCartButton.disabled = true;
+      if (productNameEl) productNameEl.textContent = 'Produk tidak tersedia';
+      if (productDescriptionEl) productDescriptionEl.textContent = 'Silakan kembali dan pilih produk lain.';
+      if (addToCartButton) addToCartButton.disabled = true;
     });
 }
 
