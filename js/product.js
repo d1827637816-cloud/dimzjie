@@ -94,13 +94,14 @@ function loadProduct() {
     if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
     return 'http://localhost:3000';
   })();
+  const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
 
   fetch(`${API_BASE_URL}/products`)
     .then(response => {
       if (!response.ok) throw new Error('Backend tidak tersedia');
       return response.json();
     })
-    .catch(() => fetch('data/products.json').then(response => response.json()))
+    .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
     .then(products => {
       const items = Array.isArray(products) ? products : [];
       const product = items.find(item => item.slug === slug) || items[0];

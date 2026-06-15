@@ -2,6 +2,12 @@ const productGrid = document.getElementById('product-grid');
 const searchInput = document.getElementById('product-search');
 const filterButtons = document.querySelectorAll('.filter-btn');
 const noResults = document.getElementById('no-results');
+const API_BASE_URL = (() => {
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+  return 'http://localhost:3000';
+})();
+const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
 
 let allProducts = [];
 let activeFilter = 'all';
@@ -23,7 +29,7 @@ function loadAllProducts() {
       if (!response.ok) throw new Error('Backend tidak tersedia');
       return response.json();
     })
-    .catch(() => fetch('data/products.json').then(response => response.json()))
+    .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
     .then(products => {
       allProducts = Array.isArray(products) ? products : [];
       renderProducts();
