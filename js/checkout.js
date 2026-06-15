@@ -12,6 +12,7 @@ const danaQrImage = document.getElementById('dana-qr');
 
 const CART_KEY = 'dimzjie_cart';
 const DANA_ACCOUNT = '082376890370';
+const DANA_QR_IMAGE = 'images/dana-qr.png';
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -74,8 +75,7 @@ function renderDanaPaymentInfo(total) {
   }
 
   if (danaQrImage) {
-    const qrText = encodeURIComponent(`DANA:${DANA_ACCOUNT}`);
-    danaQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${qrText}`;
+    danaQrImage.src = DANA_QR_IMAGE;
     danaQrImage.alt = `QR Code transfer DANA ke ${DANA_ACCOUNT} sejumlah ${formatPrice(total)}`;
   }
 }
