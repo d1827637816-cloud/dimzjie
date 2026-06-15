@@ -9,6 +9,7 @@ const cartContentEl = document.getElementById('cart-content');
 
 const CART_KEY = 'dimzjie_cart';
 const PRODUCTS_LOCAL_KEY = 'dimzjie_local_products';
+let currentProduct = null;
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -111,6 +112,11 @@ function loadProduct() {
 
   const DATA_PRODUCTS_URL = new URL('data/products.json', window.location.href).href;
 
+  if (addToCartButton) {
+    addToCartButton.disabled = true;
+    addToCartButton.onclick = null;
+  }
+
   fetch(`${API_BASE_URL}/products`)
     .then(response => {
       if (!response.ok) throw new Error('Backend tidak tersedia');
@@ -119,12 +125,14 @@ function loadProduct() {
     .catch(() => fetch(DATA_PRODUCTS_URL).then(response => response.json()))
     .then(products => mergeProducts(products))
     .then(products => {
-      const product = Array.isArray(products)
-        ? products.find(item => item.slug === slug) || products[0]
-        : null;
+      if (!Array.isArray(products) || products.length === 0) {
+        throw new Error('Daftar produk kosong');
+      }
 
+      let product = products.find(item => item.slug === slug);
       if (!product) {
-        throw new Error('Produk tidak ditemukan');
+        console.warn(`Slug produk tidak ditemukan: ${slug}. Menampilkan produk default.`);
+        product = products[0];
       }
 
       if (productNameEl) productNameEl.textContent = product.name || 'Produk Tidak Ditemukan';
@@ -140,13 +148,20 @@ function loadProduct() {
       }
 
       if (addToCartButton) {
+        currentProduct = product;
         addToCartButton.disabled = false;
-        addToCartButton.addEventListener('click', () => updateCart(product));
+        addToCartButton.onclick = () => {
+          if (currentProduct) updateCart(currentProduct);
+        };
       }
     })
-    .catch(() => {
+    .catch(error => {
+      console.error('Gagal memuat produk:', error);
       if (productNameEl) productNameEl.textContent = 'Produk tidak tersedia';
       if (productDescriptionEl) productDescriptionEl.textContent = 'Silakan kembali dan pilih produk lain.';
+      if (productCategoryEl) productCategoryEl.textContent = '';
+      if (productPriceEl) productPriceEl.textContent = 'Rp0';
+      if (productFeaturesEl) productFeaturesEl.innerHTML = '';
       if (addToCartButton) addToCartButton.disabled = true;
     });
 }
