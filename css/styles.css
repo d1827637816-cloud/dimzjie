@@ -225,6 +225,17 @@ img {
   align-self: start;
 }
 
+.detail-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+.detail-actions .btn {
+  padding: 0.95rem 1.5rem;
+}
+
 .about {
   padding: 4rem 0;
 }
@@ -303,10 +314,133 @@ img {
   flex-wrap: wrap;
 }
 
+.checkout-section {
+  padding: 4rem 0;
+}
+
+.checkout-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 0.8fr;
+  gap: 2rem;
+  align-items: flex-start;
+}
+
+.checkout-form-box,
+.checkout-summary-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  padding: 2rem;
+  box-shadow: var(--shadow);
+}
+
+.checkout-form label {
+  display: block;
+  margin-bottom: 1rem;
+  color: var(--primary);
+}
+
+.checkout-form input,
+.checkout-form textarea {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  padding: 0.95rem 1rem;
+  margin-top: 0.5rem;
+  font: inherit;
+}
+
+.checkout-form textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.payment-methods {
+  margin-bottom: 1.5rem;
+}
+
+.payment-label {
+  display: block;
+  margin-bottom: 0.75rem;
+  font-weight: 700;
+}
+
+.payment-methods label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
+.checkout-items,
+.cart-list {
+  display: grid;
+  gap: 1rem;
+}
+
+.checkout-item,
+.cart-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 1.25rem;
+  background: #f9fafb;
+}
+
+.checkout-total,
+.cart-total {
+  display: flex;
+  justify-content: space-between;
+  padding: 1rem 0;
+  margin-top: 1rem;
+  font-size: 1.05rem;
+}
+
+.checkout-instructions {
+  margin-top: 1rem;
+  color: var(--muted);
+}
+
+.confirmation-page {
+  padding: 4rem 0;
+}
+
+.confirmation-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2rem;
+  padding: 2.5rem;
+  box-shadow: var(--shadow);
+}
+
+.confirmation-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 2rem;
+  flex-wrap: wrap;
+}
+
+.order-summary p,
+.instruction-box p {
+  margin: 0.75rem 0;
+}
+
+.instruction-box {
+  padding: 1.5rem;
+  background: #fdf2f2;
+  border: 1px solid rgba(239, 68, 68, 0.16);
+  border-radius: 1.5rem;
+  margin-top: 1.5rem;
+}
+
 @media (max-width: 900px) {
   .hero-content,
   .about-grid,
-  .footer-inner {
+  .footer-inner,
+  .checkout-grid {
     grid-template-columns: 1fr;
   }
   .product-grid {

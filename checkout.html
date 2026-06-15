@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout - Dimzjie Outfit</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">Dimzjie Outfit</a>
+      <nav class="main-nav" id="main-nav">
+        <a href="index.html#home">Beranda</a>
+        <a href="index.html#products">Produk</a>
+        <a href="index.html#about">Tentang</a>
+        <a href="index.html#contact">Kontak</a>
+      </nav>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Buka menu">Menu</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="checkout-section">
+      <div class="container checkout-grid">
+        <div class="checkout-form-box">
+          <div class="section-heading">
+            <span>Checkout</span>
+            <h2>Lengkapi Pesanan Anda</h2>
+          </div>
+          <form id="checkout-form" class="checkout-form">
+            <label>
+              Nama Lengkap
+              <input type="text" id="customer-name" required placeholder="Masukkan nama Anda" />
+            </label>
+            <label>
+              Email
+              <input type="email" id="customer-email" required placeholder="contoh@email.com" />
+            </label>
+            <label>
+              Nomor HP
+              <input type="tel" id="customer-phone" required placeholder="0812xxxxxxx" />
+            </label>
+            <label>
+              Alamat Pengiriman
+              <textarea id="customer-address" required placeholder="Alamat lengkap untuk pengiriman"></textarea>
+            </label>
+            <div class="payment-methods">
+              <span class="payment-label">Metode Pembayaran</span>
+              <label><input type="radio" name="payment" value="Bank Transfer" checked /> Bank Transfer (BCA / Mandiri / BNI)</label>
+              <label><input type="radio" name="payment" value="QRIS" /> QRIS</label>
+              <label><input type="radio" name="payment" value="E-Wallet" /> E-Wallet (OVO / Dana / ShopeePay)</label>
+            </div>
+            <button type="submit" class="btn btn-primary">Bayar dan Konfirmasi</button>
+          </form>
+        </div>
+        <div class="checkout-summary-box">
+          <div class="section-heading">
+            <span>Ringkasan Pesanan</span>
+            <h2>Isi Keranjang</h2>
+          </div>
+          <div id="checkout-summary" class="checkout-summary">
+            <p>Memuat keranjang...</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-inner">
+      <div>
+        <h2>Dimzjie Outfit</h2>
+        <p>Jadikan gaya harian lebih percaya diri dengan pilihan baju lokal yang nyaman dan modern.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html#home">Beranda</a>
+        <a href="index.html#products">Produk</a>
+        <a href="index.html#about">Tentang</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+  <script src="js/checkout.js"></script>
+</body>
+</html>

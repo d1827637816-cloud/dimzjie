@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Konfirmasi Pembayaran - Dimzjie Outfit</title>
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a href="index.html" class="brand">Dimzjie Outfit</a>
+      <nav class="main-nav" id="main-nav">
+        <a href="index.html#home">Beranda</a>
+        <a href="index.html#products">Produk</a>
+        <a href="index.html#about">Tentang</a>
+        <a href="index.html#contact">Kontak</a>
+      </nav>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Buka menu">Menu</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="confirmation-page">
+      <div class="container confirmation-box">
+        <div class="section-heading">
+          <span>Konfirmasi Pembayaran</span>
+          <h2>Order Anda Telah Dibuat</h2>
+        </div>
+        <div id="confirmation-content">
+          <p>Memuat detail order...</p>
+        </div>
+        <div class="confirmation-actions">
+          <a href="index.html" class="btn btn-secondary">Kembali ke Beranda</a>
+          <a href="checkout.html" class="btn btn-primary">Lihat Lagi</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer" id="contact">
+    <div class="container footer-inner">
+      <div>
+        <h2>Dimzjie Outfit</h2>
+        <p>Jadikan gaya harian lebih percaya diri dengan pilihan baju lokal yang nyaman dan modern.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html#home">Beranda</a>
+        <a href="index.html#products">Produk</a>
+        <a href="index.html#about">Tentang</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+  <script>
+    const confirmationContent = document.getElementById('confirmation-content');
+    const orderData = window.localStorage.getItem('dimzjie_last_order');
+
+    function formatPrice(amount) {
+      return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
+    }
+
+    function renderConfirmation(data) {
+      if (!data) {
+        confirmationContent.innerHTML = `
+          <p>Order tidak ditemukan. Silakan lakukan checkout kembali.</p>
+        `;
+        return;
+      }
+
+      const items = data.cart.map(item => `
+        <div class="checkout-item">
+          <div>
+            <strong>${item.name}</strong>
+            <p>Jumlah: ${item.quantity}</p>
+          </div>
+          <span>${formatPrice(item.price * item.quantity)}</span>
+        </div>
+      `).join('');
+
+      const total = formatPrice(data.total);
+      let instructions = '';
+
+      switch (data.paymentMethod) {
+        case 'Bank Transfer':
+          instructions = `
+            <p>Silakan transfer ke salah satu rekening berikut:</p>
+            <ul>
+              <li>BCA 123-456-7890 a.n. Dimzjie Outfit</li>
+              <li>Mandiri 987-654-3210 a.n. Dimzjie Outfit</li>
+              <li>BNI 112-233-4455 a.n. Dimzjie Outfit</li>
+            </ul>
+            <p>Setelah melakukan transfer, konfirmasi melalui email atau chat yang tersedia.</p>
+          `;
+          break;
+        case 'QRIS':
+          instructions = '<p>Silakan bayar menggunakan QRIS melalui aplikasi dompet digital Anda. Scan kode QR di halaman konfirmasi yang akan Anda terima.</p>';
+          break;
+        case 'E-Wallet':
+          instructions = '<p>Silakan bayar melalui OVO, Dana, atau ShopeePay. Pastikan nominal sesuai dengan total pembayaran.</p>';
+          break;
+        default:
+          instructions = '<p>Pilih metode pembayaran yang tersedia.</p>';
+      }
+
+      confirmationContent.innerHTML = `
+        <div class="order-summary">
+          <p>Terima kasih, <strong>${data.name}</strong>! Pesanan Anda berhasil dibuat.</p>
+          <p><strong>Email:</strong> ${data.email}</p>
+          <p><strong>Nomor HP:</strong> ${data.phone}</p>
+          <p><strong>Alamat:</strong> ${data.address}</p>
+          <p><strong>Metode Pembayaran:</strong> ${data.paymentMethod}</p>
+          <p><strong>Total Pembayaran:</strong> ${total}</p>
+        </div>
+        <div class="checkout-items">${items}</div>
+        <div class="instruction-box">${instructions}</div>
+      `;
+    }
+
+    renderConfirmation(orderData ? JSON.parse(orderData) : null);
+  </script>
+</body>
+</html>
