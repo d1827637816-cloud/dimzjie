@@ -9,6 +9,11 @@ const transferAmountLabel = document.getElementById('transfer-amount-label');
 const proofUpload = document.getElementById('proof-upload');
 const CART_KEY = 'dimzjie_cart';
 const TRANSFER_ACCOUNT = '082376890370';
+const API_BASE_URL = (() => {
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+  return 'http://localhost:3000';
+})();
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);

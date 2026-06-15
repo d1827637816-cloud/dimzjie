@@ -1,6 +1,11 @@
 const navToggle = document.getElementById('nav-toggle');
 const mainNav = document.getElementById('main-nav');
 const productGrid = document.getElementById('product-grid');
+const API_BASE_URL = (() => {
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+  return 'http://localhost:3000';
+})();
 
 if (navToggle && mainNav) {
   navToggle.addEventListener('click', () => {
@@ -15,7 +20,7 @@ function formatPrice(amount) {
 function loadHomepageProducts() {
   if (!productGrid) return;
 
-  fetch('/products')
+  fetch(`${API_BASE_URL}/products`)
     .then(response => response.json())
     .then(products => {
       const recommendedProducts = Array.isArray(products) ? products.slice(0, 3) : [];

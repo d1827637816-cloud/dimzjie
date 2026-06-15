@@ -12,7 +12,13 @@ function formatPrice(amount) {
 }
 
 function loadAllProducts() {
-  fetch('/products')
+  const API_BASE_URL = (() => {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+    return 'http://localhost:3000';
+  })();
+
+  fetch(`${API_BASE_URL}/products`)
     .then(response => response.json())
     .then(products => {
       allProducts = Array.isArray(products) ? products : [];

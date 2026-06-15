@@ -2,6 +2,11 @@ const adminLoginForm = document.getElementById('admin-login-form');
 const adminPasswordInput = document.getElementById('admin-password-input');
 const adminLoginError = document.getElementById('admin-login-error');
 const STATIC_ADMIN_PASSWORD = 'dimzjie123';
+const API_BASE_URL = (() => {
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+  return 'http://localhost:3000';
+})();
 
 function displayAdminLoginError(message) {
   if (!adminLoginError) return;

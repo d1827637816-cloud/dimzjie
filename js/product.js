@@ -89,8 +89,13 @@ function getProductSlug() {
 
 function loadProduct() {
   const slug = getProductSlug();
+  const API_BASE_URL = (() => {
+    const host = window.location.hostname;
+    if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+    return 'http://localhost:3000';
+  })();
 
-  fetch('/products')
+  fetch(`${API_BASE_URL}/products`)
     .then(response => response.json())
     .then(products => {
       const items = Array.isArray(products) ? products : [];

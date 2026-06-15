@@ -10,6 +10,11 @@ const productImageUrlInput = document.getElementById('product-image-url-input');
 const productImageFileInput = document.getElementById('product-image-file-input');
 const productFormMessage = document.getElementById('product-form-message');
 const latestProductsEl = document.getElementById('latest-products');
+const API_BASE_URL = (() => {
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+  return 'http://localhost:3000';
+})();
 
 function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
@@ -58,7 +63,7 @@ function renderNotifications(data) {
 }
 
 function loadNotifications() {
-  fetch('/checkout-notifications')
+  fetch(`${API_BASE_URL}/checkout-notifications`)
     .then(response => response.json())
     .then(data => renderNotifications(data))
     .catch(() => {
@@ -119,7 +124,7 @@ function handleAddProductSubmit(event) {
     formData.append('imageFile', imageFile);
   }
 
-  fetch('/products', {
+  fetch(`${API_BASE_URL}/products`, {
     method: 'POST',
     body: formData,
   })
@@ -143,7 +148,7 @@ addProductForm?.addEventListener('submit', handleAddProductSubmit);
 function loadLatestProducts(limit = 6) {
   if (!latestProductsEl) return;
   latestProductsEl.innerHTML = '<p>Memuat produk terbaru...</p>';
-  fetch('/products')
+  fetch(`${API_BASE_URL}/products`)
     .then(resp => resp.json())
     .then(products => {
       const sorted = Array.isArray(products) ? products.slice().sort((a, b) => b.id - a.id) : [];

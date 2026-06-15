@@ -18,6 +18,11 @@ const productImageFileInput = document.getElementById('product-image-file-input'
 const productFormMessage = document.getElementById('product-form-message');
 const productSearchInput = document.getElementById('product-search-input');
 const productPageSizeSelect = document.getElementById('product-page-size');
+const API_BASE_URL = (() => {
+  const host = window.location.hostname;
+  if (host === 'localhost' || host === '127.0.0.1' || host === '::1') return '';
+  return 'http://localhost:3000';
+})();
 const productPrevBtn = document.getElementById('product-prev');
 const productNextBtn = document.getElementById('product-next');
 const productPageInfo = document.getElementById('product-page-info');
@@ -95,7 +100,7 @@ function renderPurchaseHistory(data) {
 }
 
 function loadPurchaseHistory() {
-  fetch('/checkout-notifications')
+  fetch(`${API_BASE_URL}/checkout-notifications`)
     .then(resp => resp.json())
     .then(data => renderPurchaseHistory(data))
     .catch(() => {
@@ -245,7 +250,7 @@ function updateMap() {
 }
 
 function fetchConfig() {
-  return fetch('/config')
+  return fetch(`${API_BASE_URL}/config`)
     .then(response => response.json())
     .catch(() => ({ googleMapsApiKey: '' }));
 }
@@ -296,7 +301,7 @@ async function updateOrderShipment(id, stage, status, location) {
 }
 
 function loadOrders() {
-  fetch('/checkout-notifications')
+  fetch(`${API_BASE_URL}/checkout-notifications`)
     .then(response => response.json())
     .then(data => {
       orders = (Array.isArray(data) ? data : []).map(item => ({
@@ -360,7 +365,7 @@ function renderProductPage() {
   adminProductList.querySelectorAll('.btn-delete').forEach(btn => btn.addEventListener('click', () => {
     const id = Number(btn.dataset.id);
     if (!confirm('Hapus produk ini?')) return;
-    fetch(`/products/${id}`, { method: 'DELETE' })
+    fetch(`${API_BASE_URL}/products/${id}`, { method: 'DELETE' })
       .then(r => r.json())
       .then(data => {
         if (data.success) {
@@ -472,7 +477,7 @@ function handleAddProductSubmit(event) {
   const method = editingProductId ? 'PUT' : 'POST';
   const url = editingProductId ? `/products/${editingProductId}` : '/products';
 
-  fetch(url, { method, body: formData })
+  fetch(`${API_BASE_URL}${url}`, { method, body: formData })
     .then(r => r.json())
     .then(data => {
       if (data.success) {
