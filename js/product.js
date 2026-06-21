@@ -15,9 +15,20 @@ function formatPrice(amount) {
   return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(amount);
 }
 
+function safeParseJSON(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.warn('Gagal mengurai JSON dari localStorage:', error);
+    return null;
+  }
+}
+
 function getCart() {
   const stored = window.localStorage.getItem(CART_KEY);
-  return stored ? JSON.parse(stored) : [];
+  const parsed = safeParseJSON(stored);
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function saveCart(cart) {

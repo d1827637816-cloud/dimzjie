@@ -80,9 +80,20 @@ const paymentMethodInputs = document.querySelectorAll('input[name="payment-metho
 paymentMethodInputs.forEach(input => input.addEventListener('change', updatePaymentMethodFields));
 updatePaymentMethodFields();
 
+function safeParseJSON(value) {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch (error) {
+    console.warn('Gagal mengurai JSON dari localStorage:', error);
+    return null;
+  }
+}
+
 function getCart() {
   const stored = window.localStorage.getItem(CART_KEY);
-  return stored ? JSON.parse(stored) : [];
+  const parsed = safeParseJSON(stored);
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function calculateCartTotal(cart) {
@@ -91,7 +102,8 @@ function calculateCartTotal(cart) {
 
 function getOrderHistory() {
   const stored = window.localStorage.getItem('dimzjie_order_history');
-  return stored ? JSON.parse(stored) : [];
+  const parsed = safeParseJSON(stored);
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function saveOrderHistory(history) {
@@ -111,6 +123,8 @@ function renderCheckoutSummary() {
 
   if (cart.length === 0) {
     checkoutSummary.innerHTML = '<p>Keranjang Anda kosong. Tambahkan produk terlebih dahulu.</p>';
+    if (transferAmountLabel) transferAmountLabel.textContent = 'Rp0';
+    if (transferAmountEl) transferAmountEl.value = '';
     return;
   }
 
@@ -193,7 +207,8 @@ function completeCheckout(orderData) {
 // Pending notifications queue (stored in localStorage)
 function getPendingNotifications() {
   const stored = window.localStorage.getItem('dimzjie_pending_notifications');
-  return stored ? JSON.parse(stored) : [];
+  const parsed = safeParseJSON(stored);
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 function savePendingNotifications(list) {

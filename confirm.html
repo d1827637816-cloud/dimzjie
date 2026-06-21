@@ -86,15 +86,26 @@
       let instructions = '';
 
       switch (data.paymentMethod) {
+        case 'Transfer':
         case 'Bank Transfer':
           instructions = `
-            <p>Silakan transfer ke salah satu rekening berikut:</p>
+            <p>Silakan transfer ke nomor berikut:</p>
             <ul>
-              <li>BCA 123-456-7890 a.n. Dimzjie Outfit</li>
-              <li>Mandiri 987-654-3210 a.n. Dimzjie Outfit</li>
-              <li>BNI 112-233-4455 a.n. Dimzjie Outfit</li>
+              <li>082376890370 a.n. Dimzjie Outfit</li>
             </ul>
             <p>Setelah melakukan transfer, konfirmasi melalui email atau chat yang tersedia.</p>
+          `;
+          break;
+        case 'QRIS':
+          instructions = `
+            <p>Silakan bayar melalui QRIS dari aplikasi dompet digital Anda.</p>
+            <p>Unggah bukti pembayaran dan periksa kembali status pesanan di riwayat pesanan.</p>
+          `;
+          break;
+        case 'E-Wallet':
+          instructions = `
+            <p>Bayar melalui OVO, DANA, atau ShopeePay sesuai instruksi aplikasi Anda.</p>
+            <p>Unggah bukti pembayaran dan cek riwayat pesanan untuk status terbaru.</p>
           `;
           break;
         case 'Stripe':
